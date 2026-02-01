@@ -1,0 +1,48 @@
+local vim = game:GetService("VirtualInputManager")
+local player = game.Players.LocalPlayer
+
+-- [1] سكربت الرمي الذكي (يوقف إذا طلع الميني جيم)
+task.spawn(function()
+    while true do
+        -- تشييك: هل الميني جيم طالع على الشاشة؟
+        local minigame = player.PlayerGui:FindFirstChild("SliderMinigame", true)
+        
+        if not minigame then
+            -- إذا الميني جيم مو موجود.. ارمي الصنارة
+            local x = workspace.CurrentCamera.ViewportSize.X / 2
+            local y = workspace.CurrentCamera.ViewportSize.Y / 2
+            
+            vim:SendMouseButtonEvent(x, y, 0, true, game, 1)
+            task.wait(0.1)
+            vim:SendMouseButtonEvent(x, y, 0, false, game, 1)
+            
+            -- ينتظر 4 ثواني قبل الرمية الجاية
+            task.wait(4)
+        else
+            -- إذا الميني جيم موجود.. السكربت يوقف "ينتظر" وما يضغط شيء
+            repeat 
+                task.wait(1) 
+            until not player.PlayerGui:FindFirstChild("SliderMinigame", true)
+            -- أول ما يختفي الميني جيم (بعد الفوز)، ينتظر شوي ثم يرجع يرمي
+            task.wait(2)
+        end
+    end
+end)
+
+-- [2] سكربت الفوز (شغال لحاله أول ما يلقى الميني جيم ينهيه)
+task.spawn(function()
+    while true do
+        task.wait(0.1)
+        local mg = player.PlayerGui:FindFirstChild("SliderMinigame", true)
+        if mg then
+            pcall(function()
+                for _, v in pairs(getgc(true)) do
+                    if type(v) == "table" and rawget(v, "win") then
+                        v.win:Fire(true)
+                    end
+                end
+            end)
+            task.wait(2)
+        end
+    end
+end)
